@@ -16,13 +16,34 @@ class PostsTable
     {
         return $table
             ->columns([
-                TextColumn::make('title'),
-                TextColumn::make('slug'),
-                TextColumn::make('category.name')->label('Category'),
+                // Kolom Judul dengan fitur sortable
+                TextColumn::make('title')
+                    ->sortable(), 
+
+                // Kolom Slug dengan fitur sortable
+                TextColumn::make('slug')
+                    ->sortable(),
+
+                // Kolom Kategori dengan fitur sortable
+                TextColumn::make('category.name')
+                    ->label('Category')
+                    ->sortable(),
+
+                // Kolom Warna
                 ColorColumn::make('color'),
+
+                // Kolom Gambar dengan disk public
                 ImageColumn::make('image')
                     ->disk('public'),
+
+                // Penambahan Kolom Created At sesuai Gambar 9f8cfd.png
+                TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime()
+                    ->sortable(),
             ])
+            // Menambahkan pengurutan default sesuai Gambar 9f857c.png
+            ->defaultSort('created_at', 'asc')
             ->filters([
                 //
             ])
@@ -35,4 +56,4 @@ class PostsTable
                 ]),
             ]);
     }
-}
+}   
