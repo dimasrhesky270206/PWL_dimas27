@@ -9,6 +9,10 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
 
 class PostsTable
 {
@@ -16,36 +20,64 @@ class PostsTable
     {
         return $table
             ->columns([
-                // Kolom Judul dengan fitur sortable
+                // Kolom ID sekarang bisa di-toggle (disembunyikan/ditampilkan)
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->toggleable(), // <--- TAMBAHKAN INI
+
                 TextColumn::make('title')
-                    ->sortable(), 
+                    ->sortable()
+                    ->searchable(),
 
-                // Kolom Slug dengan fitur sortable
                 TextColumn::make('slug')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
 
-                // Kolom Kategori dengan fitur sortable
                 TextColumn::make('category.name')
                     ->label('Category')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
 
-                // Kolom Warna
                 ColorColumn::make('color'),
 
-                // Kolom Gambar dengan disk public
                 ImageColumn::make('image')
                     ->disk('public'),
 
-                // Penambahan Kolom Created At sesuai Gambar 9f8cfd.png
                 TextColumn::make('created_at')
                     ->label('Created At')
                     ->dateTime()
                     ->sortable(),
+
+                TextColumn::make('tags')
+                    ->label('Tags')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                IconColumn::make('published')
+                    ->boolean()
+                    ->label('Published'),
             ])
-            // Menambahkan pengurutan default sesuai Gambar 9f857c.png
+            // ... kode selanjutnya (sort, filter, dll) tetap sama
             ->defaultSort('created_at', 'asc')
             ->filters([
-                //
+                Filter::make('created_at')
+                    ->label('Creation Date')
+                    ->schema([
+                        DatePicker::make('created_at')
+                            ->label('Select Date'),
+                    ])
+                    ->query(function ($query, $data) {
+                        return $query->when(
+                            $data['created_at'],
+                            fn ($query, $date) =>
+                                $query->whereDate('created_at', $date)
+                        );
+                    }),
+
+                SelectFilter::make('category_id')
+                    ->relationship('category', 'name')
+                    ->label('Category')
+                    ->preload(),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -56,4 +88,4 @@ class PostsTable
                 ]),
             ]);
     }
-}   
+}
