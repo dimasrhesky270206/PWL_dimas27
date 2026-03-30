@@ -7,6 +7,7 @@ use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
+use App\Filament\Resources\Categories\RelationManagers\PostsRelationManager; 
 use App\Models\Category;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,7 +18,6 @@ use Filament\Tables\Table;
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -35,7 +35,7 @@ class CategoryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PostsRelationManager::class,
         ];
     }
 

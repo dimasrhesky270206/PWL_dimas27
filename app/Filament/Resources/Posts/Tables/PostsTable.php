@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Posts\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ReplicateAction; 
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ColorColumn;
@@ -13,6 +15,8 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Checkbox; 
+use Filament\Actions\Action;
 
 class PostsTable
 {
@@ -20,11 +24,10 @@ class PostsTable
     {
         return $table
             ->columns([
-                // Kolom ID sekarang bisa di-toggle (disembunyikan/ditampilkan)
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
-                    ->toggleable(), // <--- TAMBAHKAN INI
+                    ->toggleable(),
 
                 TextColumn::make('title')
                     ->sortable()
@@ -51,13 +54,13 @@ class PostsTable
 
                 TextColumn::make('tags')
                     ->label('Tags')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->getStateUsing(fn ($record) => $record->tags->pluck('name')->join(', ')),
 
                 IconColumn::make('published')
                     ->boolean()
                     ->label('Published'),
             ])
-            // ... kode selanjutnya (sort, filter, dll) tetap sama
             ->defaultSort('created_at', 'asc')
             ->filters([
                 Filter::make('created_at')
@@ -80,9 +83,40 @@ class PostsTable
                     ->preload(),
             ])
             ->recordActions([
-                EditAction::make(),
+                // 1. Replicate dengan Ikon
+                ReplicateAction::make()
+                    ->icon('heroicon-m-document-duplicate')
+                    ->color('warning'),
+
+                // 2. Edit dengan Ikon
+                EditAction::make()
+                    ->icon('heroicon-m-pencil-square'),
+
+                // 3. Delete dengan Ikon
+                DeleteAction::make()
+                    ->icon('heroicon-m-trash'),
+
+            
+                Action::make('status')
+                    ->label('status change')
+                    ->icon('heroicon-m-arrow-path') 
+                    ->color('info')
+                    ->requiresConfirmation() 
+                    ->modalHeading('Ubah Status Publikasi')
+                    ->modalDescription('Apakah Anda yakin ingin mengubah status publikasi postingan ini?')
+                    ->modalSubmitActionLabel('Simpan Perubahan')
+                    ->schema([
+                        Checkbox::make('published')
+                            ->label('Terbitkan Postingan')
+                            ->default(fn ($record): bool => (bool) $record->published),
+                    ])
+                    ->action(function ($record, $data) {
+                        $record->update([
+                            'published' => $data['published']
+                        ]);
+                    }),
             ])
-            ->toolbarActions([
+            ->bulkActions([ 
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

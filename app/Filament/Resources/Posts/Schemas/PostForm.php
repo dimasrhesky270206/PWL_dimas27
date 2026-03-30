@@ -12,8 +12,8 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Checkbox; 
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Schemas\Components\Section;
-use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Components\Group;
+use App\Models\Category;
 
 class PostForm
 {
@@ -26,31 +26,24 @@ class PostForm
                         ->description("Fill in the details of the post")
                         ->icon('heroicon-o-document-text')
                         ->schema([ 
-                            // Validasi Title: Minimal 5 karakter & Wajib diisi
+                            // Validasi Title sesuai foto: min:3 | max:10 (Contoh di foto)
+                            // Catatan: Saya sesuaikan dengan rules di gambar Anda (baris 36)
                             TextInput::make("title")
-                                ->required()
-                                ->minLength(5)
-                                ->maxLength(50)
-                                ->validationMessages([
-                                    'minLength' => 'Judul terlalu pendek, minimal harus 5 karakter.',
-                                    'required' => 'Judul postingan tidak boleh dikosongkan.',
-                                ]),
+                                ->rules(['required', 'min:3', 'max:10']),
                             
-                            // Validasi Slug: Unik, Wajib diisi & Minimal 3 karakter
+                            // Validasi Slug: unique & validationMessages (Baris 37-42 di foto)
                             TextInput::make("slug")
-                                ->required()
-                                ->minLength(3)
+                                ->rules(['required'])
                                 ->unique(ignoreRecord: true)
                                 ->validationMessages([ 
-                                    'unique' => 'Slug sudah digunakan oleh postingan lain.',
-                                    'minLength' => 'Slug minimal terdiri dari 3 karakter.',
+                                    'unique' => 'Slug must be unique',
                                 ]),
 
-                            // Validasi Category: Wajib dipilih
+                            // PERBAIKAN UTAMA: Select Category (Baris 43-48 di foto)
                             Select::make("category_id")
                                 ->relationship("category", "name")
-                                ->required() // Menambahkan required sesuai instruksi
-                                ->preload()
+                                ->options(Category::all()->pluck("name", "id"))
+                                ->required()
                                 ->searchable(),
 
                             ColorPicker::make('color'),
@@ -63,9 +56,8 @@ class PostForm
                 Group::make([
                     Section::make("Image Upload")
                         ->schema([
-                            // Validasi Image: Wajib diupload
                             FileUpload::make("image")
-                                ->required() // Menambahkan required sesuai instruksi
+                                ->required()
                                 ->image()
                                 ->disk("public")
                                 ->directory("posts")
@@ -76,7 +68,10 @@ class PostForm
 
                     Section::make("Meta Information")
                         ->schema([
-                            TagsInput::make("tags"),
+                            Select::make('tags')
+                                ->relationship('tags', 'name')
+                                ->multiple()
+                                ->preload(),
                             Checkbox::make("published"),
                             DateTimePicker::make("published_at"),
                         ]),
